@@ -12,6 +12,8 @@ var m_colour_search: Color
 @export
 var p_pkg_new_document_popup: PackedScene
 
+var p_parser: DialogueParser
+
 var m_last_search_coords := Vector2i.ZERO
 var m_last_search_line: String
 
@@ -66,6 +68,7 @@ var p_btn_export := %Export
 #region Events
 
 func _ready() -> void:
+    p_parser = DialogueParser.new()
     p_analyser.reset()
 
     p_analyser.data_available.connect(_on_analysis_data_available)
@@ -80,6 +83,7 @@ func _ready() -> void:
     p_btn_new.pressed.connect(_on_new_document)
     p_btn_open.pressed.connect(_on_open_script)
     p_btn_save.pressed.connect(_on_save_script)
+    p_btn_export.pressed.connect(_on_export_script)
 
     p_analysis_progress.hide()
 
@@ -91,6 +95,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+    p_parser.free()
+
     p_analyser.data_available.disconnect(_on_analysis_data_available)
     p_analyser.analysis_started.disconnect(p_analysis_progress.show)
     p_analyser.analysis_aborted.disconnect(p_analysis_progress.hide)
@@ -161,6 +167,28 @@ func _on_save_script_file_selected(file_path: String, caller: FileDialog) -> voi
         return
 
     caller.queue_free()
+
+
+func _on_export_script() -> void:
+    var dialog := __start_file_dialog(&"*.dfg", &"Dialogue Graph Files", false)
+    dialog.title = "Export Graph"
+
+    dialog.file_selected.connect(_on_export_file_selected.bind(dialog))
+
+
+func _on_export_file_selected(file_path: String, caller: FileDialog) -> void:
+    if !file_path.ends_with(&".dgf"):
+        file_path += &".dgf"
+
+    var graph := p_parser.string_to_graph(p_script_pad.text)
+
+    if !is_instance_valid(caller):
+        caller.queue_free()
+
+    if graph == null:
+        return
+
+    DialogueParser.graph_to_file(graph, file_path)
 
 
 func _on_user_input_activated(event: InputEvent) -> void:
@@ -293,9 +321,6 @@ func __start_file_dialog(filter: StringName,
 
     dialog.add_filter(filter, description)
     dialog.canceled.connect(dialog.queue_free)
-
-    if read:
-        dialog.add_filter(&"*", &"All Files")
 
     dialog.popup_exclusive_centered(
         get_tree().root,
