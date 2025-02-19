@@ -1,0 +1,16 @@
+[gd_resource type="SyntaxHighlighter" script_class="DialogueScriptHighlighter" load_steps=2 format=3 uid="uid://d0rmf663sikc2"]
+
+[ext_resource type="Script" uid="uid://dpmhknose142g" path="res://Modules/DSEditor/ds_highlighter.gd" id="1_kq267"]
+
+[resource]
+script = ExtResource("1_kq267")
+m_colour_default = Color(1, 1, 1, 1)
+m_colour_comment = Color(0.557257, 0.859775, 0.117804, 1)
+m_colour_bookmark = Color(0.933454, 0.791108, 0.285167, 1)
+m_colour_command = Color(1, 0.408211, 0.561932, 1)
+m_colour_character = Color(0.783909, 0.537864, 1, 1)
+m_colour_choice = Color(0.619082, 0.619082, 0.619082, 1)
+m_colour_choice_requirement = Color(0.162848, 0.621722, 0.87802, 1)
+m_colour_choice_target = Color(1, 0.721789, 0.148567, 1)
+m_colour_variable = Color(0.164706, 0.623529, 0.878431, 1)
+metadata/_custom_type_script = ExtResource("1_kq267")

@@ -1,0 +1,6 @@
+[submodule "Modules/SCHLibGD"]
+	path = Modules/SCHLibGD
+	url = https://github.com/SadColourfulHues/SCHLibGD
+[submodule "Modules/DialogueGD"]
+	path = Modules/DialogueGD
+	url = https://github.com/SadColourfulHues/DialogueGD

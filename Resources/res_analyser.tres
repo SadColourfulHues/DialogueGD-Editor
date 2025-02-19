@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="DialogueAnalyserResource" load_steps=2 format=3 uid="uid://bhnksomccsts1"]
+
+[ext_resource type="Script" uid="uid://co4k07wuk0ryy" path="res://Modules/DSEditor/ds_analyser_resource.gd" id="1_j2cir"]
+
+[resource]
+script = ExtResource("1_j2cir")
+metadata/_custom_type_script = ExtResource("1_j2cir")

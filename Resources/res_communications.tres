@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="EditorCommunications" load_steps=2 format=3 uid="uid://c26tc8gqm3f4v"]
+
+[ext_resource type="Script" uid="uid://cmmy25wyba6wh" path="res://Modules/DSEditor/editor_communications_resource.gd" id="1_reafh"]
+
+[resource]
+script = ExtResource("1_reafh")
+metadata/_custom_type_script = ExtResource("1_reafh")
