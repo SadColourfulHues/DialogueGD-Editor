@@ -1,8 +1,9 @@
 class_name DialogueScriptEditor
 extends CodeEdit
 
-@export
-var p_communications: EditorCommunications
+# TODO: ImPrOvE sUgGeStIoN lOgIc At SoMe PoInT
+# (Check back a couple commits later, if this message is still lhere
+# then rip.)
 
 @export
 var p_analyser: DialogueAnalyser
@@ -70,16 +71,23 @@ func _on_text_edited() -> void:
 		return
 
 	# Update suggestions
-	__suggest_main(candidate, line_type)
+	__suggest_main(candidate, line_type, line)
 
 #endregion
 
 #region Utils
 
 func __suggest_main(candidate: String,
-					line_type: DialogueParser.DSType) -> void:
+					line_type: DialogueParser.DSType,
+					line: String) -> void:
 
 	match line_type:
+		DialogueParser.DSType.EVENT:
+			if __suggest_event_parameters(line, candidate):
+				return
+
+			__get_event_suggestions(candidate)
+
 		DialogueParser.DSType.CHOICE:
 			__get_choice_param_suggestions(candidate)
 
@@ -88,8 +96,6 @@ func __suggest_main(candidate: String,
 				__get_suggestions_from_list(candidate, p_analyser.p_variables)
 			elif candidate.begins_with(&"<"):
 				__get_suggestions_from_list(candidate, p_analyser.p_characters)
-			elif candidate.begins_with(&"@"):
-				__get_event_suggestions(candidate)
 
 
 func __get_suggestions_from_list(candidate: String,
@@ -108,6 +114,17 @@ func __get_suggestions_from_list(candidate: String,
 	update_code_completion_options(false)
 
 
+func __get_suggestions_from_list_no_strip(candidate: String,
+								source: Array[StringName]) -> void:
+
+	for item: StringName in source:
+		if !candidate.is_subsequence_of(item):
+			continue
+
+		add_code_completion_option(CodeEdit.KIND_VARIABLE, item, item)
+	update_code_completion_options(false)
+
+
 func __get_event_suggestions(candidate: String) -> void:
 	for item: StringName in p_analyser.p_events:
 		var match_item := &"@" + item
@@ -118,7 +135,23 @@ func __get_event_suggestions(candidate: String) -> void:
 		add_code_completion_option(
 			CodeEdit.KIND_VARIABLE,
 			match_item,
-			item
+			item + &" "
+		)
+
+	update_code_completion_options(false)
+
+
+func __get_unwrapped_variable_suggestions_as_event_parameter(candidate: String) -> void:
+	for item: StringName in p_analyser.p_variables:
+		var match_item := DialogueParser.unwrap_tag(item)
+
+		if !candidate.is_subsequence_of(match_item):
+			continue
+
+		add_code_completion_option(
+			CodeEdit.KIND_VARIABLE,
+			match_item,
+			match_item + &" "
 		)
 
 	update_code_completion_options(false)
@@ -158,5 +191,50 @@ func __get_choice_param_suggestions(candidate: String) -> void:
 			)
 
 	update_code_completion_options(false)
+
+
+func __suggest_event_parameters(line: String, candidate: String) -> bool:
+	# For the sake of simplifying things, only do suggestions
+	# when the user is currently typing at the end of the line
+
+	# Return true if parameter suggestions is to be prioritised
+	# over event names
+
+	if candidate.is_empty() || !line.ends_with(candidate):
+		return false
+
+	var command_id := line.substr(1, line.find(&" ") - 1)
+	var parameter_index := line.count(&" ")
+
+	match command_id:
+		# Event: @jump <bookmark_id>
+		&"jump":
+			if parameter_index != 1:
+				return true
+
+			__get_suggestions_from_list_no_strip(candidate, p_analyser.p_bookmarks)
+			return true
+
+		# Event: @jumpif <variable> <bookmark>
+		&"jumpif":
+			match parameter_index:
+				1:
+					__get_unwrapped_variable_suggestions_as_event_parameter(candidate)
+
+				2:
+					__get_suggestions_from_list_no_strip(candidate, p_analyser.p_bookmarks)
+
+			return true
+
+		# Event: @set <variable> <values ...>
+		#		 @(un)flag <variable>
+		&"set", &"flag", &"unflag":
+			if parameter_index != 1:
+				return true
+
+			__get_unwrapped_variable_suggestions_as_event_parameter(candidate)
+			return true
+
+	return false
 
 #endregion

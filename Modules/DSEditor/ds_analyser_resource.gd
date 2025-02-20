@@ -186,21 +186,28 @@ func __analyse_main(text: String) -> void:
                 is_choice_start = true
 
             DialogueParser.DSType.EVENT:
-                var command_id := line.split(" ")[0]
+                var command_id := line.substr(0, line.find(&" "))
+                var has_multi_の := command_id.count(&"@") > 1
+                command_id = command_id.lstrip(&"@")
 
-                if command_id.count(&"@") > 1:
+                # Checks: Command ID #
+                if has_multi_の:
                     errors.append(
-                        __warning(i, &"Multiple '@' in event.")
+                        __warning(i, &"Multiple '@' in event IDs are ignored, its name then becomes \"%s\"" % command_id)
                     )
 
-                command_id = command_id.lstrip(&"@")
                 scene_size_estimate += 1
 
                 if p_pat_variables.search(command_id) != null:
                     errors.append(
-                        __warning(i, &"Variables are not supported in event IDs.")
+                        __error(i, &"Variables are not supported in event IDs.")
                     )
                     continue
+
+                # Special case: variable-setter events
+                match command_id:
+                    &"flag", &"set":
+                        __push_unique(&"{%s}" % __extract_first_param(line), p_variables)
 
                 __push_unique(command_id, p_events)
 
@@ -225,6 +232,16 @@ func __analyse_main(text: String) -> void:
 
     p_mutex.unlock()
     data_available.emit.call_deferred(errors, bookmark_indices)
+
+
+func __extract_first_param(line: String) -> String:
+    var param_start := 1 + line.find(&" ")
+    var param_end := line.findn(&" ", param_start)
+
+    if param_end == -1:
+        return line.substr(param_start, -1)
+
+    return line.substr(param_start, (param_end - param_start))
 
 
 func __warning(line: int, message: StringName) -> DialogueAnalyserError:
