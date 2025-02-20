@@ -1,8 +1,9 @@
-[gd_scene load_steps=12 format=3 uid="uid://b8cvlsediru00"]
+[gd_scene load_steps=13 format=3 uid="uid://b8cvlsediru00"]
 
 [ext_resource type="StyleBox" uid="uid://mwpdu0kkt3pg" path="res://Assets/Styles/stl_button_hover.tres" id="1_ivlqs"]
 [ext_resource type="StyleBox" uid="uid://dvqr3ffwxae5k" path="res://Assets/Styles/stl_panel_popup.tres" id="1_t0vd3"]
 [ext_resource type="StyleBox" uid="uid://bmqasdsl4es3g" path="res://Assets/Styles/stl_button_pressed.tres" id="2_t0vd3"]
+[ext_resource type="LabelSettings" uid="uid://b2ne2u6vx4hdx" path="res://Assets/Styles/ls_title_label.tres" id="2_wyb48"]
 [ext_resource type="StyleBox" uid="uid://bsov26svc004f" path="res://Assets/Styles/stl_button_normal.tres" id="3_cogfc"]
 [ext_resource type="StyleBox" uid="uid://c8fhn330wafut" path="res://Assets/Styles/stl_button_destructive_hover.tres" id="5_7sd2w"]
 [ext_resource type="StyleBox" uid="uid://cufxdcgr1y8dx" path="res://Assets/Styles/stl_button_destructive_normal.tres" id="5_cogfc"]
@@ -47,6 +48,7 @@ layout_mode = 2
 size_flags_vertical = 2
 text = "This will delete any unsaved data.
 Would you like to continue?"
+label_settings = ExtResource("2_wyb48")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

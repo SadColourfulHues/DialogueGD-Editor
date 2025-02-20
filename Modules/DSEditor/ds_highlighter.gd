@@ -36,28 +36,27 @@ func _get_line_syntax_highlighting(line_index: int) -> Dictionary[int, Dictionar
     if line.is_empty():
         return {}
 
-    if type != DialogueParser.DSType.LINE:
-        match type:
-            DialogueParser.DSType.CHARACTER:
-                base_colour = m_colour_character
+    match type:
+        DialogueParser.DSType.CHARACTER:
+            base_colour = m_colour_character
 
-            DialogueParser.DSType.COMMENT:
-                base_colour = m_colour_comment
+        DialogueParser.DSType.COMMENT:
+            base_colour = m_colour_comment
 
-            DialogueParser.DSType.BOOKMARK:
-                base_colour = m_colour_bookmark
+        DialogueParser.DSType.BOOKMARK:
+            base_colour = m_colour_bookmark
 
-            DialogueParser.DSType.EVENT:
-                base_colour = m_colour_command
+        DialogueParser.DSType.EVENT:
+            base_colour = m_colour_command
 
-            DialogueParser.DSType.CHOICE:
-                base_colour = m_colour_choice
+        DialogueParser.DSType.CHOICE:
+            base_colour = m_colour_choice
 
-            DialogueParser.DSType.CHOICE_REQUIREMENT:
-                base_colour = m_colour_choice_requirement
+        DialogueParser.DSType.CHOICE_REQUIREMENT:
+            base_colour = m_colour_choice_requirement
 
-            DialogueParser.DSType.CHOICE_TARGET:
-                base_colour = m_colour_choice_target
+        DialogueParser.DSType.CHOICE_TARGET:
+            base_colour = m_colour_choice_target
 
     # Disallow variable highlighting on lines where it's not usable #
     if DialogueAnalyser.DSTYPE_NO_VARIABLES.has(type):

@@ -1,5 +1,7 @@
 extends Control
 
+const GENERIC_EMPTY_ARRAY := []
+
 @export
 var p_communications: EditorCommunications
 
@@ -7,10 +9,16 @@ var p_communications: EditorCommunications
 var p_analyser: DialogueAnalyser
 
 @export
-var m_colour_search: Color
+var m_colour_highlight_warning: Color
+
+@export
+var m_colour_highlight_error: Color
 
 @export
 var p_pkg_new_document_popup: PackedScene
+
+@export
+var p_pkg_rename_popup: PackedScene
 
 var p_parser: DialogueParser
 
@@ -19,11 +27,16 @@ var m_last_search_line: String
 
 var m_last_saved_path: String
 
+var p_last_error_lines: Array[int]
+
 @onready
 var p_script_pad: TextEdit = %MainEditor
 
 @onready
 var p_frame_info: Control = %InfoFrame
+
+@onready
+var p_frame_errors: Control = %WarningFrame
 
 @onready
 var p_label_last_saved_path: Label = %LastSavedFileName
@@ -41,6 +54,9 @@ var p_list_bookmarks: ItemList = %Bookmarks
 var p_list_events: ItemList = %Events
 
 @onready
+var p_list_warnings: ItemList = %Warnings
+
+@onready
 var p_field_search := %Search
 
 @onready
@@ -48,6 +64,9 @@ var p_analysis_progress: ProgressBar = %AnalysisProgress
 
 @onready
 var p_btn_info := %Info
+
+@onready
+var p_btn_errors := %Errors
 
 @onready
 var p_btn_run := %Run
@@ -77,6 +96,8 @@ func _ready() -> void:
     p_analyser.analysis_updated.connect(p_analysis_progress.set_value_no_signal)
 
     p_btn_info.pressed.connect(_on_toggle_info_frame)
+    p_btn_errors.pressed.connect(_on_toggle_warnings_frame)
+
     p_field_search.text_changed.connect(_on_search_requested)
     p_field_search.focus_exited.connect(p_field_search.clear)
 
@@ -85,11 +106,20 @@ func _ready() -> void:
     p_btn_save.pressed.connect(_on_save_script)
     p_btn_export.pressed.connect(_on_export_script)
 
+    p_list_bookmarks.item_clicked.connect(_on_bookmark_selected)
+    p_list_warnings.item_clicked.connect(_on_error_selected)
+
+    __bind_rename_popup(p_list_characters, &"<%s>")
+    __bind_rename_popup(p_list_variables, &"{%s}")
+    __bind_rename_popup(p_list_events, &"@%s")
+
     p_analysis_progress.hide()
 
     # Initial state #
     p_btn_info.button_pressed = false
+
     p_frame_info.hide()
+    p_frame_errors.hide()
 
     last_saved_path = &""
 
@@ -107,6 +137,27 @@ func _input(event: InputEvent) -> void:
     SCHUtils.iesetactioncallback(event, get_viewport(), _on_user_input_activated)
 
 
+func _on_bookmark_selected(index: int, _2: Vector2, mouse_index: int) -> void:
+    if mouse_index != MOUSE_BUTTON_LEFT:
+        return
+
+    p_script_pad.set_caret_line(
+        p_list_bookmarks.get_item_metadata(index)
+    )
+
+
+func _on_error_selected(index: int, _2: Vector2, mouse_index: int) -> void:
+    if mouse_index != MOUSE_BUTTON_LEFT:
+        return
+
+    p_list_warnings.deselect(index)
+
+    if index < 0 || index >= p_last_error_lines.size():
+        return
+
+    p_script_pad.set_caret_line(p_last_error_lines[index])
+
+
 func _on_new_document() -> void:
     var popup := __start_popup(p_pkg_new_document_popup, p_btn_new)
     popup.get_node(^"%Abort").pressed.connect(popup.hide)
@@ -121,7 +172,7 @@ func _on_new_popup_submit(popup: Popup) -> void:
     p_analyser.request_stop_analysis()
     p_analyser.reset()
 
-    _on_analysis_data_available([])
+    _on_analysis_data_available(GENERIC_EMPTY_ARRAY, GENERIC_EMPTY_ARRAY)
     popup.queue_free()
 
 
@@ -211,6 +262,10 @@ func _on_toggle_info_frame() -> void:
     p_frame_info.visible = p_btn_info.button_pressed
 
 
+func _on_toggle_warnings_frame() -> void:
+    p_frame_errors.visible = p_btn_errors.button_pressed
+
+
 func _on_search_requested(search_text: String) -> void:
     if p_script_pad.text.is_empty() || search_text.is_empty():
         p_script_pad.set_search_text("")
@@ -244,56 +299,113 @@ func _on_search_requested(search_text: String) -> void:
 
     p_script_pad.set_caret_line(next_coords.y)
     p_script_pad.set_caret_column(next_coords.x)
+    p_field_search.grab_focus()
 
 
-func _on_analysis_data_available(errors: Array[DialogueAnalyserError]) -> void:
+func _on_analysis_data_available(errors: Array[DialogueAnalyserError],
+                                 bookmark_indices: Array[int]) -> void:
 
     var max_lines := p_script_pad.get_line_count()
 
+    # Warnings and Errors #
+
     # TODO: Find a better way of doing this
+    p_list_warnings.clear()
+
+    var error_count := errors.size()
+
     for i: int in range(max_lines):
         p_script_pad.set_line_background_color(i, Color(0, 0, 0, 0))
 
-    for error: DialogueAnalyserError in errors:
+    if error_count > 0 && p_last_error_lines.size() != error_count:
+        p_last_error_lines.resize(error_count)
+
+    p_frame_errors.visible = error_count > 0
+    p_btn_errors.button_pressed = p_frame_errors.visible
+
+    for i: int in error_count:
+        var error := errors[i]
+        p_last_error_lines[i] = error.m_line
+
+        p_list_warnings.add_item(
+            &"Line %d: %s" % [1 + error.m_line, error.m_message]
+        )
+
         match error.m_severity:
             DialogueAnalyserError.Severity.WARNING:
-                p_script_pad.set_line_background_color(error.m_line, Color.ORANGE)
+                p_list_warnings.set_item_custom_fg_color(i, Color.YELLOW)
+                p_script_pad.set_line_background_color(error.m_line, m_colour_highlight_warning)
 
             DialogueAnalyserError.Severity.ERROR:
-                p_script_pad.set_line_background_color(error.m_line, Color.RED)
-
+                p_list_warnings.set_item_custom_fg_color(i, Color.ORANGE_RED)
+                p_script_pad.set_line_background_color(error.m_line, m_colour_highlight_error)
 
     p_analysis_progress.hide()
 
-    p_list_characters.clear()
-    p_list_variables.clear()
     p_list_bookmarks.clear()
     p_list_events.clear()
 
-    for variable: StringName in p_analyser.p_variables:
-        p_list_variables.add_item(DialogueParser.unwrap_tag(variable), null, false)
+    # Variables + Characters #
+    __fill_list_from_source(p_list_variables, p_analyser.p_variables)
+    __fill_list_from_source(p_list_characters, p_analyser.p_characters)
 
-    for character_id: StringName in p_analyser.p_characters:
-        p_list_characters.add_item(DialogueParser.unwrap_tag(character_id), null, false)
+    # Bookmarks #
+    for i: int in range(p_analyser.p_bookmarks.size()):
+        p_list_bookmarks.add_item(p_analyser.p_bookmarks[i], null, false)
+        p_list_bookmarks.set_item_metadata(i, bookmark_indices[i])
 
-    for bookmark: StringName in p_analyser.p_bookmarks:
-        p_list_bookmarks.add_item(bookmark, null, false)
+    # Events #
+    var true_ev_index := 0
 
-    for event_id: StringName in p_analyser.p_events:
+    for i: int in range(p_analyser.p_events.size()):
+        var event_id := p_analyser.p_events[i]
+
         if DialogueAnalyser.INBUILT_COMMANDS_SUGGESTIONS.has(event_id):
             continue
 
         p_list_events.add_item(event_id, null, false)
+        p_list_events.set_item_metadata(true_ev_index, event_id)
+        true_ev_index += 1
 
 #endregion
 
 #region Utils
 
-func __start_popup(template: PackedScene, parent_ref: Control) -> PopupPanel:
+func __fill_list_from_source(list: ItemList, source: Array[StringName]) -> void:
+    list.clear()
+
+    for i: int in range(source.size()):
+        var item: String = DialogueParser.unwrap_tag(source[i])
+
+        list.add_item(item, null, false)
+        list.set_item_metadata(i, item)
+
+
+func __bind_rename_popup(list: ItemList, template_string: StringName) -> void:
+    list.item_clicked.connect((func(index: int, _2: Vector2, mouse_index: int):
+        if mouse_index != MOUSE_BUTTON_LEFT:
+            return
+
+        __start_rename_popup(
+            list,
+            template_string,
+            list.get_item_metadata(index)
+        )
+    ))
+
+
+func __start_popup(template: PackedScene,
+                   parent_ref: Control,
+                   from_top := true) -> PopupPanel:
+
     var popup: PopupPanel = template.instantiate()
 
     var rect: Rect2 = parent_ref.get_global_rect()
-    rect.position.y += rect.size.y
+
+    if from_top:
+        rect.position.y += rect.size.y
+    else:
+        rect.position.x += rect.size.x
 
     popup.popup_exclusive_on_parent(
         parent_ref,
@@ -302,6 +414,20 @@ func __start_popup(template: PackedScene, parent_ref: Control) -> PopupPanel:
 
     popup.popup_hide.connect(popup.queue_free)
     return popup
+
+
+func __start_rename_popup(parent_ref: Control,
+                          template_string: StringName,
+                          original_text: String) -> void:
+
+    var popup: RenamePopup = __start_popup(p_pkg_rename_popup, parent_ref, false)
+
+    popup.start(original_text, (func(original: String, updated: String):
+        p_script_pad.text = p_script_pad.text.replace(template_string % original,
+                                                      template_string % updated)
+
+        p_analyser.start_analysis_on_main(p_script_pad.text)
+    ))
 
 
 func __start_file_dialog(filter: StringName,

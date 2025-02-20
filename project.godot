@@ -18,6 +18,10 @@ run/low_processor_mode=true
 run/delta_smoothing=false
 config/icon="res://Assets/icon.svg"
 
+[display]
+
+window/size/viewport_width=1280
+
 [file_customization]
 
 folder_colors={

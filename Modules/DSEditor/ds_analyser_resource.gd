@@ -90,11 +90,18 @@ func request_stop_analysis() -> void:
 
 #region Utils
 
-func __push_unique(value: StringName, target: Array[StringName]) -> bool:
+func __push_unique(value: StringName,
+                   target: Array[StringName],
+                   callback := Callable()) -> bool:
+
     if value.is_empty() || target.has(value):
         return false
 
     target.append(value)
+
+    if callback.is_valid():
+        callback.call()
+
     return true
 
 
@@ -103,11 +110,19 @@ func __analyse_main(text: String) -> void:
         return
 
     var lines := text.split(&"\n")
+
     var errors: Array[DialogueAnalyserError] = []
+    var bookmark_indices: Array[int] = []
+
     reset()
 
     var line_count := float(lines.size())
     var scene_size_estimate := 0
+
+    var is_choice_start := false
+    var num_unclosed_choices := 0
+    var last_scene_start_line := 0
+    var last_choice_start_line := 0
 
     for i: int in range(line_count):
         var line := lines[i]
@@ -121,55 +136,12 @@ func __analyse_main(text: String) -> void:
 
         analysis_updated.emit.call_deferred(i / line_count)
 
-        if line.strip_edges().is_empty():
+        if (line_type == DialogueParser.DSType.COMMENT ||
+            line.strip_edges().is_empty()):
+
             continue
 
-        # Scan for basic types
-        match line_type:
-            DialogueParser.DSType.COMMENT:
-                continue
-
-            DialogueParser.DSType.CHARACTER:
-                if i > 0 && scene_size_estimate < 1:
-                    errors.append(
-                        __warning(i, &"Previous scene is empty.")
-                    )
-
-                __push_unique(line.strip_edges(), p_characters)
-                scene_size_estimate = 0
-
-            DialogueParser.DSType.LINE, \
-            DialogueParser.DSType.CHOICE:
-                scene_size_estimate += 1
-
-            # Bookmarks and events should not have variables in them
-            DialogueParser.DSType.EVENT:
-                var command_id := line.lstrip(&"@").split(" ")[0]
-                scene_size_estimate += 1
-
-                if p_pat_variables.search(command_id) != null:
-                    errors.append(
-                        __error(i, &"Variables are not supported as event IDs.")
-                    )
-                    continue
-
-                __push_unique(command_id, p_events)
-                continue
-
-            DialogueParser.DSType.BOOKMARK:
-                if __push_unique(DialogueParser.unwrap_tag(line), p_bookmarks):
-                    continue
-
-                errors.append(
-                    __warning(i, &"Unreachable: the first scene with this bookmark will take priority, instead.")
-                )
-
-                continue
-
-            DialogueParser.DSType.CHOICE_TARGET:
-                continue
-
-        # Scan for variables
+        # Scan for variables/var-in-type compatibility
         var candidates := p_pat_variables.search_all(line)
 
         if !candidates.is_empty() && DSTYPE_NO_VARIABLES.has(line_type):
@@ -181,8 +153,78 @@ func __analyse_main(text: String) -> void:
         for candidate: RegExMatch in candidates:
             __push_unique(candidate.get_string(0), p_variables)
 
+        # Scan for basic types
+        match line_type:
+            DialogueParser.DSType.CHARACTER:
+
+                if num_unclosed_choices > 0:
+                    errors.append(
+                        __error(last_choice_start_line, &"All choices must have a target bookmark.")
+                    )
+
+                if scene_size_estimate > 0:
+                    last_scene_start_line = i
+
+                if i > 0 && scene_size_estimate < 1:
+                    errors.append(
+                        __warning(last_scene_start_line, &"Scene is empty.")
+                    )
+
+                __push_unique(line.strip_edges(), p_characters)
+
+                scene_size_estimate = 0
+
+            DialogueParser.DSType.LINE:
+                scene_size_estimate += 1
+
+            DialogueParser.DSType.CHOICE:
+                if !is_choice_start:
+                    last_choice_start_line = i
+                    num_unclosed_choices += 1
+
+                scene_size_estimate += 1
+                is_choice_start = true
+
+            DialogueParser.DSType.EVENT:
+                var command_id := line.split(" ")[0]
+
+                if command_id.count(&"@") > 1:
+                    errors.append(
+                        __warning(i, &"Multiple '@' in event.")
+                    )
+
+                command_id = command_id.lstrip(&"@")
+                scene_size_estimate += 1
+
+                if p_pat_variables.search(command_id) != null:
+                    errors.append(
+                        __warning(i, &"Variables are not supported in event IDs.")
+                    )
+                    continue
+
+                __push_unique(command_id, p_events)
+
+            DialogueParser.DSType.BOOKMARK:
+                var bookmark := DialogueParser.unwrap_tag(line)
+
+                if __push_unique(bookmark,
+                                 p_bookmarks,
+                                 bookmark_indices.append.bind(i)):
+
+                    continue
+
+                errors.append(
+                    __warning(i, &"Unreachable: the first scene with this bookmark will take priority, instead.")
+                )
+
+            DialogueParser.DSType.CHOICE_TARGET:
+                if is_choice_start:
+                    num_unclosed_choices = max(0, num_unclosed_choices - 1)
+
+                is_choice_start = false
+
     p_mutex.unlock()
-    data_available.emit.call_deferred(errors)
+    data_available.emit.call_deferred(errors, bookmark_indices)
 
 
 func __warning(line: int, message: StringName) -> DialogueAnalyserError:

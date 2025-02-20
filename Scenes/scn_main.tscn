@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://4btc03hi8q8g"]
+[gd_scene load_steps=44 format=3 uid="uid://4btc03hi8q8g"]
 
 [ext_resource type="Script" uid="uid://c6rjf5ekpkucb" path="res://Scenes/Scripts/editor_main.gd" id="1_vwdh4"]
 [ext_resource type="StyleBox" uid="uid://n4jvwmtox5g2" path="res://Assets/Styles/stl_panel_toolbar.tres" id="2_pj3at"]
@@ -7,10 +7,13 @@
 [ext_resource type="PackedScene" uid="uid://b8cvlsediru00" path="res://Scenes/pop_new_document_prompt.tscn" id="4_4yy8o"]
 [ext_resource type="SyntaxHighlighter" uid="uid://d0rmf663sikc2" path="res://Resources/res_ds_highlighter.tres" id="4_kkyi5"]
 [ext_resource type="StyleBox" uid="uid://bubmqwae18u8h" path="res://Assets/Styles/stl_hseparator.tres" id="4_rneeg"]
+[ext_resource type="PackedScene" uid="uid://cmvudqybhys7n" path="res://Scenes/pop_rename.tscn" id="5_c0ko2"]
 [ext_resource type="StyleBox" uid="uid://mwpdu0kkt3pg" path="res://Assets/Styles/stl_button_hover.tres" id="6_2ply8"]
 [ext_resource type="StyleBox" uid="uid://dugck1xj5c6rj" path="res://Assets/Styles/stl_textfield_focus.tres" id="6_lw12g"]
+[ext_resource type="LabelSettings" uid="uid://b2ne2u6vx4hdx" path="res://Assets/Styles/ls_title_label.tres" id="6_q2kq3"]
 [ext_resource type="Resource" uid="uid://c26tc8gqm3f4v" path="res://Resources/res_communications.tres" id="6_uific"]
 [ext_resource type="StyleBox" uid="uid://114aq1bqhv1l" path="res://Assets/Styles/stl_textfield_normal.tres" id="7_4yy8o"]
+[ext_resource type="LabelSettings" uid="uid://er652vwbhxcs" path="res://Assets/Styles/ls_sub_label.tres" id="7_bejsd"]
 [ext_resource type="StyleBox" uid="uid://bmqasdsl4es3g" path="res://Assets/Styles/stl_button_pressed.tres" id="7_ljabw"]
 [ext_resource type="Resource" uid="uid://bhnksomccsts1" path="res://Resources/res_analyser.tres" id="7_rneeg"]
 [ext_resource type="StyleBox" uid="uid://bsov26svc004f" path="res://Assets/Styles/stl_button_normal.tres" id="8_lw12g"]
@@ -41,6 +44,15 @@ unicode = 92
 
 [sub_resource type="Shortcut" id="Shortcut_4yy8o"]
 events = [SubResource("InputEventKey_wrflj"), SubResource("InputEventKey_lw12g")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_1u4kk"]
+device = -1
+ctrl_pressed = true
+keycode = 69
+unicode = 101
+
+[sub_resource type="Shortcut" id="Shortcut_y81lo"]
+events = [SubResource("InputEventKey_1u4kk")]
 
 [sub_resource type="InputEventKey" id="InputEventKey_4yy8o"]
 device = -1
@@ -84,9 +96,10 @@ events = [SubResource("InputEventKey_s47t7")]
 
 [sub_resource type="InputEventKey" id="InputEventKey_q7ycs"]
 device = -1
+shift_pressed = true
 ctrl_pressed = true
 keycode = 69
-unicode = 101
+unicode = 69
 
 [sub_resource type="Shortcut" id="Shortcut_wrflj"]
 events = [SubResource("InputEventKey_q7ycs")]
@@ -99,18 +112,18 @@ bg_color = Color(0, 0.589915, 0.421137, 1)
 border_width_right = 2
 border_color = Color(7.70092e-07, 0.821966, 0.513648, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rneeg"]
-bg_color = Color(0.233199, 0.204268, 0.328936, 1)
-border_width_right = 2
-border_color = Color(0.240195, 0.141616, 0.226126, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_uific"]
-font_color = Color(0.227207, 0.706505, 0.538555, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r5157"]
 bg_color = Color(0.355682, 0.291346, 0.177754, 1)
 border_width_right = 2
 border_color = Color(0.329542, 0.214658, 0.15003, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_uific"]
+font_color = Color(0.227207, 0.706505, 0.538555, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rneeg"]
+bg_color = Color(0.233199, 0.204268, 0.328936, 1)
+border_width_right = 2
+border_color = Color(0.240195, 0.141616, 0.226126, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ccudq"]
 bg_color = Color(0.16313, 0.233827, 0.307307, 1)
@@ -125,7 +138,11 @@ border_color = Color(0.191177, 0.126498, 0.198753, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kkyi5"]
 bg_color = Color(0.117539, 0.213898, 0.168874, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bejsd"]
+bg_color = Color(0.0955513, 0.180914, 0.170657, 1)
+
 [node name="Editor" type="PanelContainer"]
+texture_filter = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -134,8 +151,10 @@ grow_vertical = 2
 script = ExtResource("1_vwdh4")
 p_communications = ExtResource("6_uific")
 p_analyser = ExtResource("7_rneeg")
-m_colour_search = Color(0.19325, 0.364241, 0.248233, 1)
+m_colour_highlight_warning = Color(0.582979, 0.358437, 0.0676713, 0.556863)
+m_colour_highlight_error = Color(0.629635, 0.0974193, 9.62615e-08, 0.572549)
 p_pkg_new_document_popup = ExtResource("4_4yy8o")
+p_pkg_rename_popup = ExtResource("5_c0ko2")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
@@ -159,6 +178,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 text = "Dialogue Script Editor"
+label_settings = ExtResource("6_q2kq3")
 
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/ToolBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
@@ -169,13 +189,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Saving to \"\""
+label_settings = ExtResource("7_bejsd")
 
 [node name="ButtonBar" type="PanelContainer" parent="VBoxContainer/ToolBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_ljabw")
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ToolBar/MarginContainer/HBoxContainer/ButtonBar"]
-custom_minimum_size = Vector2(420, 0)
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
@@ -208,6 +229,19 @@ toggle_mode = true
 button_pressed = true
 shortcut = SubResource("Shortcut_4yy8o")
 text = "Info"
+
+[node name="Errors" type="Button" parent="VBoxContainer/ToolBar/MarginContainer/HBoxContainer/ButtonBar/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/hover = ExtResource("6_2ply8")
+theme_override_styles/pressed = ExtResource("7_ljabw")
+theme_override_styles/normal = ExtResource("8_lw12g")
+toggle_mode = true
+shortcut = SubResource("Shortcut_y81lo")
+text = "Errors"
 
 [node name="Run" type="Button" parent="VBoxContainer/ToolBar/MarginContainer/HBoxContainer/ButtonBar/MarginContainer/HBoxContainer"]
 unique_name_in_owner = true
@@ -288,7 +322,7 @@ text = "Export"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HSplitContainer"]
+[node name="HBoxContainer" type="HSplitContainer" parent="VBoxContainer/HSplitContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -307,38 +341,6 @@ max_value = 1.0
 step = 0.001
 value = 0.5
 show_percentage = false
-
-[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame"]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_rneeg")
-
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
-
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Characters"
-label_settings = SubResource("LabelSettings_uific")
-
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_styles/separator = ExtResource("4_rneeg")
-
-[node name="Characters" type="ItemList" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-focus_mode = 0
-allow_search = false
 
 [node name="PanelContainer2" type="PanelContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame"]
 custom_minimum_size = Vector2(0, 80)
@@ -366,6 +368,38 @@ layout_mode = 2
 theme_override_styles/separator = ExtResource("4_rneeg")
 
 [node name="Bookmarks" type="ItemList" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer2/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+allow_search = false
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_rneeg")
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Characters"
+label_settings = SubResource("LabelSettings_uific")
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/separator = ExtResource("4_rneeg")
+
+[node name="Characters" type="ItemList" parent="VBoxContainer/HSplitContainer/HBoxContainer/InfoFrame/PanelContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -436,10 +470,15 @@ size_flags_vertical = 3
 focus_mode = 0
 allow_search = false
 
-[node name="MainEditor" type="CodeEdit" parent="VBoxContainer/HSplitContainer/HBoxContainer"]
+[node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MainEditor" type="CodeEdit" parent="VBoxContainer/HSplitContainer/HBoxContainer/VSplitContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_colors/word_highlighted_color = Color(0.930043, 0.66324, 1.92523e-06, 1)
 theme_override_colors/current_line_color = Color(0.241718, 0.530449, 0.262084, 0.243137)
 theme_override_colors/font_placeholder_color = Color(0.327325, 0.442545, 0.442302, 1)
@@ -482,6 +521,33 @@ indent_automatic = true
 script = ExtResource("4_2hs4a")
 p_communications = ExtResource("6_uific")
 p_analyser = ExtResource("7_rneeg")
+
+[node name="WarningFrame" type="PanelContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/VSplitContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bejsd")
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/VSplitContainer/WarningFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HSplitContainer/HBoxContainer/VSplitContainer/WarningFrame/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HSplitContainer/HBoxContainer/VSplitContainer/WarningFrame/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Warnings/Errors"
+
+[node name="Warnings" type="ItemList" parent="VBoxContainer/HSplitContainer/HBoxContainer/VSplitContainer/WarningFrame/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+allow_search = false
 
 [node name="Sidebar" type="PanelContainer" parent="VBoxContainer/HSplitContainer"]
 unique_name_in_owner = true
