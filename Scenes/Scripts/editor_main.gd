@@ -1,12 +1,13 @@
 extends Control
 
-const GENERIC_EMPTY_ARRAY := []
-
-@export
-var p_communications: EditorCommunications
-
 @export
 var p_analyser: DialogueAnalyser
+
+@export
+var m_colour_log_warning: Color
+
+@export
+var m_colour_log_error: Color
 
 @export
 var m_colour_highlight_warning: Color
@@ -26,11 +27,15 @@ var m_last_search_coords := Vector2i.ZERO
 var m_last_search_line: String
 
 var m_last_saved_path: String
+var m_last_exec_line: int
 
 var p_last_error_lines: Array[int]
 
 @onready
-var p_script_pad: TextEdit = %MainEditor
+var p_script_pad: DialogueScriptEditor = %MainEditor
+
+@onready
+var p_preview: ScriptPreview = %ScriptPreview
 
 @onready
 var p_frame_info: Control = %InfoFrame
@@ -90,6 +95,9 @@ func _ready() -> void:
     p_parser = DialogueParser.new()
     p_analyser.reset()
 
+    p_preview.scene_changed.connect(_on_preview_scene_changed)
+    p_preview.hidden.connect(func(): p_script_pad.gutters_draw_executing_lines = false)
+
     p_analyser.data_available.connect(_on_analysis_data_available)
     p_analyser.analysis_started.connect(p_analysis_progress.show)
     p_analyser.analysis_aborted.connect(p_analysis_progress.hide)
@@ -97,6 +105,7 @@ func _ready() -> void:
 
     p_btn_info.pressed.connect(_on_toggle_info_frame)
     p_btn_errors.pressed.connect(_on_toggle_warnings_frame)
+    p_btn_run.pressed.connect(_on_run_pressed)
 
     p_field_search.text_changed.connect(_on_search_requested)
     p_field_search.focus_exited.connect(p_field_search.clear)
@@ -158,6 +167,38 @@ func _on_error_selected(index: int, _2: Vector2, mouse_index: int) -> void:
     p_script_pad.set_caret_line(p_last_error_lines[index])
 
 
+func _on_run_pressed() -> void:
+    if p_preview.visible:
+        p_preview.set_graph(null)
+        return
+
+    p_script_pad.clear_executing_lines()
+    m_last_exec_line = -1
+
+    if p_script_pad.text.strip_edges().is_empty():
+        return
+
+    p_script_pad.gutters_draw_executing_lines = true
+    p_script_pad.release_focus()
+
+    p_preview.set_graph(p_parser.string_to_graph(p_script_pad.text))
+
+
+func _on_preview_scene_changed(scene_idx: int) -> void:
+    if !p_analyser.p_scene_indices.has(scene_idx):
+        return
+
+    var current_exec_line := p_analyser.p_scene_indices[scene_idx]
+
+    if m_last_exec_line != -1:
+        p_script_pad.set_line_as_executing(m_last_exec_line, false)
+
+    p_script_pad.set_line_as_executing(current_exec_line, true)
+    p_script_pad.set_caret_line(current_exec_line)
+
+    m_last_exec_line = current_exec_line
+
+
 func _on_new_document() -> void:
     var popup := __start_popup(p_pkg_new_document_popup, p_btn_new)
     popup.get_node(^"%Abort").pressed.connect(popup.hide)
@@ -172,7 +213,7 @@ func _on_new_popup_submit(popup: Popup) -> void:
     p_analyser.request_stop_analysis()
     p_analyser.reset()
 
-    _on_analysis_data_available(GENERIC_EMPTY_ARRAY, GENERIC_EMPTY_ARRAY)
+    _on_analysis_data_available([], [])
     popup.queue_free()
 
 
@@ -333,11 +374,11 @@ func _on_analysis_data_available(errors: Array[DialogueAnalyserError],
 
         match error.m_severity:
             DialogueAnalyserError.Severity.WARNING:
-                p_list_warnings.set_item_custom_fg_color(i, Color.YELLOW)
+                p_list_warnings.set_item_custom_fg_color(i, m_colour_log_warning)
                 p_script_pad.set_line_background_color(error.m_line, m_colour_highlight_warning)
 
             DialogueAnalyserError.Severity.ERROR:
-                p_list_warnings.set_item_custom_fg_color(i, Color.ORANGE_RED)
+                p_list_warnings.set_item_custom_fg_color(i, m_colour_log_error)
                 p_script_pad.set_line_background_color(error.m_line, m_colour_highlight_error)
 
     p_analysis_progress.hide()
@@ -423,10 +464,18 @@ func __start_rename_popup(parent_ref: Control,
     var popup: RenamePopup = __start_popup(p_pkg_rename_popup, parent_ref, false)
 
     popup.start(original_text, (func(original: String, updated: String):
+
+        var caret_line := p_script_pad.get_caret_line()
+        var caret_col := p_script_pad.get_caret_column()
+
         p_script_pad.text = p_script_pad.text.replace(template_string % original,
                                                       template_string % updated)
 
         p_analyser.start_analysis_on_main(p_script_pad.text)
+
+        # Attempt to restore caret position
+        p_script_pad.set_caret_line(caret_line)
+        p_script_pad.set_caret_column(caret_col)
     ))
 
 

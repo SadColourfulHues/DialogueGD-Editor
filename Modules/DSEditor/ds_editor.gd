@@ -25,7 +25,7 @@ func _ready() -> void:
 	p_analyse_debounce.timeout.connect(_on_request_start_analysis)
 	add_child.call_deferred(p_analyse_debounce)
 
-	get_v_scroll_bar().scale = Vector2.ZERO
+	get_v_scroll_bar().scale.x = 0.0
 
 
 func _exit_tree() -> void:

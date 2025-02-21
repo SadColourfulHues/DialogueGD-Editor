@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://ctwhykdbygv6h" path="res://Scenes/Scripts/rename_popup.gd" id="2_05p5j"]
 [ext_resource type="StyleBox" uid="uid://mwpdu0kkt3pg" path="res://Assets/Styles/stl_button_hover.tres" id="2_mh52n"]
 [ext_resource type="StyleBox" uid="uid://114aq1bqhv1l" path="res://Assets/Styles/stl_textfield_normal.tres" id="3_05p5j"]
-[ext_resource type="LabelSettings" uid="uid://b2ne2u6vx4hdx" path="res://Assets/Styles/ls_title_label.tres" id="3_mh52n"]
+[ext_resource type="LabelSettings" uid="uid://ds540o2g0rrsh" path="res://Assets/Styles/ls_title_app_title.tres" id="3_mh52n"]
 [ext_resource type="StyleBox" uid="uid://bmqasdsl4es3g" path="res://Assets/Styles/stl_button_pressed.tres" id="3_txllv"]
 [ext_resource type="StyleBox" uid="uid://bsov26svc004f" path="res://Assets/Styles/stl_button_normal.tres" id="4_l8qxw"]
 

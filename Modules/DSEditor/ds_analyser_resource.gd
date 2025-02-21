@@ -29,6 +29,8 @@ var p_bookmarks: Array[StringName]
 var p_variables: Array[StringName]
 var p_events: Array[StringName]
 
+var p_scene_indices: Dictionary[int, int]
+
 
 func _init() -> void:
     p_mutex = Mutex.new()
@@ -54,6 +56,7 @@ func _notification(what: int) -> void:
 func reset() -> void:
     m_abort = false
 
+    p_scene_indices.clear()
     p_characters.clear()
     p_bookmarks.clear()
     p_variables.clear()
@@ -120,9 +123,12 @@ func __analyse_main(text: String) -> void:
     var scene_size_estimate := 0
 
     var is_choice_start := false
+
     var num_unclosed_choices := 0
     var last_scene_start_line := 0
     var last_choice_start_line := 0
+
+    var scene_idx := 0
 
     for i: int in range(line_count):
         var line := lines[i]
@@ -156,6 +162,8 @@ func __analyse_main(text: String) -> void:
         # Scan for basic types
         match line_type:
             DialogueParser.DSType.CHARACTER:
+                p_scene_indices[scene_idx] = i
+                scene_idx += 1
 
                 if num_unclosed_choices > 0:
                     errors.append(

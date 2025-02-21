@@ -1,0 +1,146 @@
+[gd_scene load_steps=15 format=3 uid="uid://dgs2ye6col2gp"]
+
+[ext_resource type="StyleBox" uid="uid://1ngcxvtx3xlu" path="res://Assets/Styles/stl_panel_preview.tres" id="1_10577"]
+[ext_resource type="LabelSettings" uid="uid://bhj73wytwr0gg" path="res://Assets/Styles/ls_dialogue_preview_title.tres" id="1_bo3c7"]
+[ext_resource type="LabelSettings" uid="uid://bx73pa4vkty4i" path="res://Assets/Styles/ls_dialogue_preview_dialogue_lines.tres" id="2_10577"]
+[ext_resource type="Script" uid="uid://dj0hx7a317oaa" path="res://Scenes/Scripts/script_preview.gd" id="2_mklvy"]
+[ext_resource type="StyleBox" uid="uid://mwpdu0kkt3pg" path="res://Assets/Styles/stl_button_hover.tres" id="3_84pxo"]
+[ext_resource type="StyleBox" uid="uid://bubmqwae18u8h" path="res://Assets/Styles/stl_hseparator.tres" id="4_84pxo"]
+[ext_resource type="StyleBox" uid="uid://bmqasdsl4es3g" path="res://Assets/Styles/stl_button_pressed.tres" id="4_mklvy"]
+[ext_resource type="StyleBox" uid="uid://bsov26svc004f" path="res://Assets/Styles/stl_button_normal.tres" id="5_ocloq"]
+[ext_resource type="LabelSettings" uid="uid://er652vwbhxcs" path="res://Assets/Styles/ls_sub_label.tres" id="9_ocloq"]
+
+[sub_resource type="InputEventKey" id="InputEventKey_y81lo"]
+device = -1
+keycode = 4194309
+
+[sub_resource type="InputEventKey" id="InputEventKey_y2ap5"]
+device = -1
+keycode = 32
+unicode = 32
+
+[sub_resource type="Shortcut" id="Shortcut_65nrc"]
+events = [SubResource("InputEventKey_y81lo"), SubResource("InputEventKey_y2ap5")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_65nrc"]
+device = -1
+shift_pressed = true
+ctrl_pressed = true
+keycode = 82
+unicode = 82
+
+[sub_resource type="Shortcut" id="Shortcut_t572i"]
+events = [SubResource("InputEventKey_65nrc")]
+
+[node name="ScriptPreview" type="Panel"]
+custom_minimum_size = Vector2(300, 0)
+offset_right = 300.0
+offset_bottom = 480.0
+theme_override_styles/panel = ExtResource("1_10577")
+script = ExtResource("2_mklvy")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DialogueItems" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="CharacterID" type="Label" parent="MarginContainer/VBoxContainer/DialogueItems"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1, 0)
+layout_mode = 2
+text = "Character ID"
+label_settings = ExtResource("1_bo3c7")
+autowrap_mode = 3
+
+[node name="Dialogue" type="Label" parent="MarginContainer/VBoxContainer/DialogueItems"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1, 0)
+layout_mode = 2
+size_flags_vertical = 6
+text = "Eat a rug and furry furry hairs everywhere oh no human coming lie on counter don't get off counter hit you unexpectedly munch on tasty moths."
+label_settings = ExtResource("2_10577")
+autowrap_mode = 3
+
+[node name="EmptyLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 6
+text = "Preview has not started yet..."
+label_settings = ExtResource("9_ocloq")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/separator = ExtResource("4_84pxo")
+
+[node name="FlowButtons" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/FlowButtons"]
+layout_mode = 2
+text = "Flow Control:"
+label_settings = ExtResource("9_ocloq")
+
+[node name="Advance" type="Button" parent="MarginContainer/VBoxContainer/FlowButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/hover = ExtResource("3_84pxo")
+theme_override_styles/pressed = ExtResource("4_mklvy")
+theme_override_styles/normal = ExtResource("5_ocloq")
+shortcut = SubResource("Shortcut_65nrc")
+text = "Advance"
+
+[node name="Restart" type="Button" parent="MarginContainer/VBoxContainer/FlowButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/hover = ExtResource("3_84pxo")
+theme_override_styles/pressed = ExtResource("4_mklvy")
+theme_override_styles/normal = ExtResource("5_ocloq")
+shortcut = SubResource("Shortcut_t572i")
+text = "Restart"
+
+[node name="ChoiceButtons" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
+layout_mode = 2
+text = "Select Choice:"
+label_settings = ExtResource("9_ocloq")
+
+[node name="ChoiceTemplate" type="Button" parent="MarginContainer/VBoxContainer/ChoiceButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_styles/focus = ExtResource("3_84pxo")
+theme_override_styles/hover = ExtResource("3_84pxo")
+theme_override_styles/pressed = ExtResource("4_mklvy")
+theme_override_styles/normal = ExtResource("5_ocloq")
+text = "Fairly Long Choice String"
